@@ -11,7 +11,10 @@ import requests
 from bs4 import BeautifulSoup
 from io import BytesIO
 import os
+import sys
 
+# sourceHost = '177pic.info'
+sourceHost = 'pic177.com'
 
 def getSource(url):     # 读取完整页面 返回一个漫画名称和下载地址的mapping
     r = requests.get(url)
@@ -60,37 +63,47 @@ def downloadComic(comic_link):      # 下载图片
         tmp = getImglink(x)
         for y in tmp:
             imglist.append(y)
-    for z in range(len(imglist)):      # 用range是因为要重命名图片为后面打包做准备
+    cnt = 0
+    sumImages = len(imglist)
+    for z in range(sumImages):      # 用range是因为要重命名图片为后面打包做准备
+        fileName = str(z).zfill(3) + '.jpg'
         img = requests.get(imglist[z-1])
-        with open(str(z)+'.jpg', 'wb') as f: # 图片wb模式写入 binary
+        with open(fileName, 'wb') as f: # 图片wb模式写入 binary
             f.write(img.content)
+            cnt += 1
+            print('\r', end="", flush=True)
+            print(str(cnt).rjust(3, ' ') + '/' + str(sumImages), end="", flush=True)
     os.chdir('..')
+    print('')
 
 def getSourcePageNumber():
-    source = requests.get('http://www.177pic.info/html/category/tt/page/1')
+    url = 'http://' + sourceHost + '/html/category/tt/page/1'
+    source = requests.get(url)
     sourcesoup = BeautifulSoup(source.text,'lxml')
     sourcepage = sourcesoup.find(attrs={'class':'wp-pagenavi'})
-    source_page_number = int(sourcepage.contents[-2]['href'].splite('/')[-1])
+    source_page_number = int(sourcepage.contents[-2]['href'].split('/')[-1])
     return source_page_number
 
 
 def main(): # main 模块
+    recode = '';
     if os.path.exists('recode') == False:
         print('第一次运行，建立页面记录')
         os.popen('touch recode')    # 判断是否首次执行脚本
         with open ('recode','w') as f:
-            f.write('http://www.177pic.info/html/category/tt/page/1')
+            recode = 'http://' + sourceHost + '/html/category/tt/page/1'
+            f.write(recode)
     else:
         print('读取上次停止下载页面')
         with open('recode','r') as f:
             trecode = f.readline()  # 读取记录
             recode = trecode.split('/')
             print('上次停止在第{0}页'.format(recode))
-    url = 'http://www.177pic.info/html/category/tt'
-    total_page = getSourcePageNumber   
+    url = 'http://' + sourceHost +'/html/category/tt'
+    total_page = getSourcePageNumber()
     url_list = []
     for i in range(int(recode[-1]), total_page):    # 根据记录选择开始页面
-        url_list.append(url+'/page/'+str(i+1))
+        url_list.append(url+'/page/'+str(i))
     tmp = os.popen('ls').readlines()
     allcomic = []
     for i in tmp:
@@ -101,11 +114,12 @@ def main(): # main 模块
         with open('recode','w') as f:
             f.write(y)
         comic = getSource(y)
+        print('下载列表:',comic)
         for x in comic:
             # print(comic[x],end=' ')
             # print((comic[x]+'.cbr'  in allcomic))
             if ((comic[x]+'.cbr') in allcomic) == True:
-                print(comic[x],'已经存在。')
+                print(comic[x],'.cbr已经存在。')
             else:
                 print('正在下载: ',comic[x])
                 if (os.path.exists(comic[x])) == True:
@@ -114,14 +128,14 @@ def main(): # main 模块
                     downloadComic(x)
                     command = 'rar a -r -s -m5 -df \''+comic[x]+'.cbr\' \''+comic[x]+'\''
                     os.system(command)
-                    os.system('clear')
+                    # os.system('clear')
                 else:
                     os.mkdir(comic[x])
                     os.chdir(comic[x])
                     downloadComic(x)
                     command = 'rar a -r -s -m5 -df \''+comic[x]+'.cbr\' \''+comic[x]+'\''
                     os.system(command)
-                    os.system('clear')
+                    # os.system('clear')
 
 if __name__ == '__main__':
-    main(url_list)
+    main()
