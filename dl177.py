@@ -12,9 +12,13 @@ from bs4 import BeautifulSoup
 from io import BytesIO
 import os
 import sys
+import argparse
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
-# sourceHost = '177pic.info'
-sourceHost = 'pic177.com'
+sourceHost = '177pic.info'
+# sourceHost = 'pic177.com'
+rootPath = ''
 
 def getSource(url):     # 读取完整页面 返回一个漫画名称和下载地址的mapping
     r = requests.get(url)
@@ -27,6 +31,14 @@ def getSource(url):     # 读取完整页面 返回一个漫画名称和下载�
         dl.append(x.contents[0]['href'])
     comic = dict(zip(dl,title))
     return(comic)
+
+def getSourceName(url):     # 读取完整页面 返回一个漫画名称和下载地址的mapping
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text,'lxml')
+    link = soup.find_all('h1')  # bs4 找 h1 tag
+    for x in link:
+        return x.contents[0]
+    return('')
 
 def getPageNumber(page_url):    # 通过下载地址判断一共有多少页
     allPage = []
@@ -91,13 +103,14 @@ def main(): # main 模块
         print('第一次运行，建立页面记录')
         os.popen('touch recode')    # 判断是否首次执行脚本
         with open ('recode','w') as f:
-            recode = 'http://' + sourceHost + '/html/category/tt/page/1'
+            recode = '/html/category/tt/page/1'
             f.write(recode)
     else:
         print('读取上次停止下载页面')
         with open('recode','r') as f:
             trecode = f.readline()  # 读取记录
             recode = trecode.split('/')
+            recode = 'http://' + sourceHost + recode
             print('上次停止在第{0}页'.format(recode))
     url = 'http://' + sourceHost +'/html/category/tt'
     total_page = getSourcePageNumber()
@@ -137,5 +150,80 @@ def main(): # main 模块
                     os.system(command)
                     # os.system('clear')
 
+def downloadComic1(comic_link):
+    print("downloadComic1 running successfully");
+
+def cur_file_dir():
+    #获取脚本路径
+    path = sys.path[0]
+    #判断为脚本文件还是py2exe编译后的文件，如果是脚本文件，则返回的是脚本的目录，
+    #如果是py2exe编译后的文件，则返回的是编译后的文件路径
+    if os.path.isdir(path):
+        return path
+    elif os.path.isfile(path):
+        return os.path.dirname(path)
+
+def getExistedComicPacks():
+    tmp = os.popen('ls').readlines()
+    allcomic = []
+    for i in tmp:
+        allcomic.append(i[:-1]) # 读取目录列表，保存以便判断漫画是否下载
+    return allcomic
+
+def downloadSingleComic(url):
+    comicName = getSourceName(url)
+    allcomic = getExistedComicPacks();
+    if ((comicName + '.cbr') in allcomic) == True:
+        print(comicName, '.cbr已经存在。')
+        return
+    else:
+        print('正在下载: ', comicName)
+        if (os.path.exists(comicName)) == True:
+            print('目录已经存在。')
+            os.chdir(comicName)
+            downloadComic(url)
+            command = 'rar a -r -s -m5 -df \'' + comicName + '.cbr\' \'' + comicName + '\''
+            os.system(command)
+        else:
+            os.mkdir(comicName)
+            os.chdir(comicName)
+            downloadComic(url)
+            command = 'rar a -r -s -m5 -df \'' + comicName + '.cbr\' \'' + comicName + '\''
+            os.system(command)
+        print(os.path.join(rootPath, comicName + '.cbr'));
+
 if __name__ == '__main__':
-    main()
+    # comicName = '[クリムゾン] JK強制操作 -スマホで長期間弄ばれた風紀委員長-【完全版】 [中国翻訳]'
+    # command = 'rar a -r -s -m5 -df \'' + comicName + '.cbr\' \'' + comicName + '\''
+    # print(command)
+    # print(cur_file_dir())
+    rootPath = os.path.join(cur_file_dir(), 'all')
+    if (os.path.exists(rootPath)) == False:
+        os.mkdir(rootPath)
+    os.chdir(rootPath)
+
+
+    # url = 'http://www.177pic66.com/html/2015/05/58477.html'
+    # downloadSingleComic(url)
+    newParser = argparse.ArgumentParser();
+    newParser.add_argument("-u", "--url", type=str, help="put the target url");
+    newParser.add_argument("-H", "--host", type=str, help="put the source host. eg: 177pic.com");
+
+    args = newParser.parse_args();
+    if args.host:
+        if "http://" in str(args.host) or "https://" in str(args.host):
+            print("host should not contain http://")
+        sourceHost = args.host
+        exit(-1)
+    if args.url:
+        val = URLValidator()
+        try:
+            val(args.url)
+        except ValidationError as e:
+            print("url validation failed, try another one")
+            sys.exit(-1)
+        print("Download with url: " + args.url)
+        downloadSingleComic(args.url)
+    else:
+        print("Running in full website download mode")
+        main()
