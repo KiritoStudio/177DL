@@ -110,7 +110,6 @@ def main(): # main 模块
         with open('recode','r') as f:
             trecode = f.readline()  # 读取记录
             recode = trecode.split('/')
-            recode = 'http://' + sourceHost + recode
             print('上次停止在第{0}页'.format(recode))
     url = 'http://' + sourceHost +'/html/category/tt'
     total_page = getSourcePageNumber()
@@ -125,7 +124,14 @@ def main(): # main 模块
     for y in url_list:
         print('正在下载: ',y)
         with open('recode','w') as f:
-            f.write(y)
+            wrotePart = ""
+            yParts = y.split('/')
+            for i in range(len(yParts)):
+                if i == 0 or i == 1:
+                    continue;
+                else:
+                    wrotePart += "/" + yParts[i]
+            f.write(wrotePart)
         comic = getSource(y)
         print('下载列表:',comic)
         for x in comic:
