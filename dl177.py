@@ -12,16 +12,26 @@ from bs4 import BeautifulSoup
 from io import BytesIO
 import os
 import sys
+from requests import Request, Session
 import argparse
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
-sourceHost = '177pic.info'
+sourceHost = 'www.177pic.info'
 # sourceHost = 'pic177.com'
 rootPath = ''
 
+proxies = {
+  # 'http': 'http://127.0.0.1:1081',
+  # 'https': 'http://127.0.0.1:1081',
+  #   'http': 'http://192.168.2.100:8888',
+  #   'https': 'https://192.168.2.100:8888',
+    'http': 'socks5://127.0.0.1:10910',
+    'https': 'socks5://127.0.0.1:10910',
+}
+
 def getSource(url):     # 读取完整页面 返回一个漫画名称和下载地址的mapping
-    r = requests.get(url)
+    r = requests.get(url, proxies=proxies)
     soup = BeautifulSoup(r.text,'lxml')
     link = soup.find_all('h2')  # bs4 找 h2 tag
     dl = []
@@ -33,7 +43,7 @@ def getSource(url):     # 读取完整页面 返回一个漫画名称和下载�
     return(comic)
 
 def getSourceName(url):     # 读取完整页面 返回一个漫画名称和下载地址的mapping
-    r = requests.get(url)
+    r = requests.get(url, proxies=proxies)
     soup = BeautifulSoup(r.text,'lxml')
     link = soup.find_all('h1')  # bs4 找 h1 tag
     for x in link:
@@ -42,7 +52,7 @@ def getSourceName(url):     # 读取完整页面 返回一个漫画名称和下�
 
 def getPageNumber(page_url):    # 通过下载地址判断一共有多少页
     allPage = []
-    p = requests.get(page_url)
+    p = requests.get(page_url, proxies=proxies)
     pagesoup = BeautifulSoup(p.text,'lxml')
     page = pagesoup.find(attrs={'class':'wp-pagenavi'}) # 直接查找attrs判断页面
     if page == None:    # 如果page值为空则返回默认页面
@@ -58,7 +68,7 @@ def getPageNumber(page_url):    # 通过下载地址判断一共有多少页
 
 def getImglink(page):       # 去的图片直链
     imgdr = []
-    p = requests.get(page)
+    p = requests.get(page, proxies=proxies)
     imgsoup = BeautifulSoup(p.text,'lxml')
     imglink = imgsoup.findAll('img')    # 找html中所有图片
     for y in imglink:
@@ -79,7 +89,7 @@ def downloadComic(comic_link):      # 下载图片
     sumImages = len(imglist)
     for z in range(sumImages):      # 用range是因为要重命名图片为后面打包做准备
         fileName = str(z).zfill(3) + '.jpg'
-        img = requests.get(imglist[z-1])
+        img = requests.get(imglist[z-1], proxies=proxies)
         with open(fileName, 'wb') as f: # 图片wb模式写入 binary
             f.write(img.content)
             cnt += 1
@@ -90,7 +100,7 @@ def downloadComic(comic_link):      # 下载图片
 
 def getSourcePageNumber():
     url = 'http://' + sourceHost + '/html/category/tt/page/1'
-    source = requests.get(url)
+    source = requests.get(url, proxies=proxies)
     sourcesoup = BeautifulSoup(source.text,'lxml')
     sourcepage = sourcesoup.find(attrs={'class':'wp-pagenavi'})
     source_page_number = int(sourcepage.contents[-2]['href'].split('/')[-1])
@@ -108,7 +118,7 @@ def main(): # main 模块
     else:
         print('读取上次停止下载页面')
         with open('recode','r') as f:
-            trecode = f.readline()  # 读取记录
+            trecode = f.readline().replace('\n','')  # 读取记录
             recode = trecode.split('/')
             print('上次停止在第{0}页'.format(recode))
     url = 'http://' + sourceHost +'/html/category/tt'
@@ -196,26 +206,33 @@ def downloadSingleComic(url):
             downloadComic(url)
             command = 'rar a -r -s -m5 -df \'' + comicName + '.cbr\' \'' + comicName + '\''
             os.system(command)
-        print(os.path.join(rootPath, comicName + '.cbr'));
+        print(os.path.join(rootPath, comicName + '.cbr'))
 
 if __name__ == '__main__':
     # comicName = '[クリムゾン] JK強制操作 -スマホで長期間弄ばれた風紀委員長-【完全版】 [中国翻訳]'
     # command = 'rar a -r -s -m5 -df \'' + comicName + '.cbr\' \'' + comicName + '\''
     # print(command)
     # print(cur_file_dir())
+
+    # connect via socks
+    # print(requests.get('http://ipip.net', proxies=proxies).text)
+
+
     rootPath = os.path.join(cur_file_dir(), 'all')
     if (os.path.exists(rootPath)) == False:
         os.mkdir(rootPath)
     os.chdir(rootPath)
 
-
-    # url = 'http://www.177pic66.com/html/2015/05/58477.html'
-    # downloadSingleComic(url)
     newParser = argparse.ArgumentParser();
-    newParser.add_argument("-u", "--url", type=str, help="put the target url");
-    newParser.add_argument("-H", "--host", type=str, help="put the source host. eg: 177pic.com");
+    newParser.add_argument("-u", "--url", type=str, help="put the target url")
+    newParser.add_argument("-H", "--host", type=str, help="put the source host. eg: 177pic.com")
+    newParser.add_argument("-R", "--reset", action='store_true', help="delete the recode file and restart downloading")
+    args = newParser.parse_args()
 
-    args = newParser.parse_args();
+    if args.reset:
+        if os.path.exists('recode'):
+            os.remove('recode')
+            print('reset the record successfully')
     if args.host:
         if "http://" in str(args.host) or "https://" in str(args.host):
             print("host should not contain http://")
