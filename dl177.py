@@ -11,12 +11,15 @@ import requests
 from bs4 import BeautifulSoup
 from io import BytesIO
 import os
+import io
 import sys
 from requests import Request, Session
 import argparse
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='gb18030')
 sourceHost = 'www.177pic.info'
 # sourceHost = 'pic177.com'
 rootPath = ''
@@ -111,7 +114,8 @@ def main(): # main 模块
     recode = '';
     if os.path.exists('recode') == False:
         print('第一次运行，建立页面记录')
-        os.popen('touch recode')    # 判断是否首次执行脚本
+        os._exists('recode')
+        # os.popen('touch recode')    # 判断是否首次执行脚本
         with open ('recode','w') as f:
             recode = '/html/category/tt/page/1'
             f.write(recode)
@@ -126,7 +130,8 @@ def main(): # main 模块
     url_list = []
     for i in range(int(recode[-1]), total_page):    # 根据记录选择开始页面
         url_list.append(url+'/page/'+str(i))
-    tmp = os.popen('ls').readlines()
+    # tmp = os.popen('ls').readlines()
+    tmp = os.listdir(rootPath)
     allcomic = []
     for i in tmp:
         allcomic.append(i[:-1]) # 读取目录列表，保存以便判断漫画是否下载
@@ -155,15 +160,17 @@ def main(): # main 模块
                     print('目录已经存在。')
                     os.chdir(comic[x])
                     downloadComic(x)
-                    command = 'rar a -r -s -m5 -df \''+comic[x]+'.cbr\' \''+comic[x]+'\''
-                    os.system(command)
+                    if (os.name != 'nt'):
+                        command = 'rar a -r -s -m5\''+comic[x]+'.cbr\' \''+comic[x]+'\'' # -df deleted because we need remain the folder
+                        os.system(command)
                     # os.system('clear')
                 else:
                     os.mkdir(comic[x])
                     os.chdir(comic[x])
                     downloadComic(x)
-                    command = 'rar a -r -s -m5 -df \''+comic[x]+'.cbr\' \''+comic[x]+'\''
-                    os.system(command)
+                    if(os.name != 'nt'):
+                        command = 'rar a -r -s -m5\''+comic[x]+'.cbr\' \''+comic[x]+'\''  # -df deleted because we need remain the folder
+                        os.system(command)
                     # os.system('clear')
 
 def downloadComic1(comic_link):
@@ -198,14 +205,16 @@ def downloadSingleComic(url):
             print('目录已经存在。')
             os.chdir(comicName)
             downloadComic(url)
-            command = 'rar a -r -s -m5 -df \'' + comicName + '.cbr\' \'' + comicName + '\''
-            os.system(command)
+            if (os.name != 'nt'):
+                command = 'rar a -r -s -m5\'' + comicName + '.cbr\' \'' + comicName + '\''
+                os.system(command)
         else:
             os.mkdir(comicName)
             os.chdir(comicName)
             downloadComic(url)
-            command = 'rar a -r -s -m5 -df \'' + comicName + '.cbr\' \'' + comicName + '\''
-            os.system(command)
+            if (os.name != 'nt'):
+                command = 'rar a -r -s -m5\'' + comicName + '.cbr\' \'' + comicName + '\'' # -df deleted because we need remain the folder
+                os.system(command)
         print(os.path.join(rootPath, comicName + '.cbr'))
 
 if __name__ == '__main__':
