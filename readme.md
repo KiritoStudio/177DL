@@ -22,11 +22,17 @@ beautifulsoup
 
 ``` bash
 brew install homebrew/binary/rar
-pip3.4 install lxml
-pip3.4 install beautifulsoup4
+pip install lxml
+pip install beautifulsoup4
+pip install requests[socks]
+pip install django
 ```
 
-
+``` For Windows
+set STATICBUILD=true && pip install lxml
+pip install beautifulsoup4  
+pip install requests[socks]
+pip install django
 
 ## 使用
 
