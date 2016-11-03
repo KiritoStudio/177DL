@@ -28,7 +28,9 @@ pip install requests[socks]
 pip install django
 ```
 
-``` For Windows
+For Windows
+
+``` bash
 set STATICBUILD=true && pip install lxml
 pip install beautifulsoup4  
 pip install requests[socks]
