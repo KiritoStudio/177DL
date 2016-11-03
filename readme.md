@@ -33,6 +33,7 @@ set STATICBUILD=true && pip install lxml
 pip install beautifulsoup4  
 pip install requests[socks]
 pip install django
+```
 
 ## 使用
 
