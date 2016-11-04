@@ -13,6 +13,7 @@ from io import BytesIO
 import os
 import io
 import sys
+import re
 from requests import Request, Session
 import argparse
 from django.core.validators import URLValidator
@@ -25,12 +26,12 @@ sourceHost = 'www.177pic.info'
 rootPath = ''
 
 proxies = {
-  # 'http': 'http://127.0.0.1:1081',
-  # 'https': 'http://127.0.0.1:1081',
-  #   'http': 'http://192.168.2.100:8888',
+  # 'http': 'http://127.0.0.1:10910',
+  # 'https': 'http://127.0.0.1:10910',
+     'http': 'http://192.168.2.100:10910',
   #   'https': 'https://192.168.2.100:8888',
-    'http': 'socks5://127.0.0.1:10910',
-    'https': 'socks5://127.0.0.1:10910',
+  #  'http': 'socks5://127.0.0.1:10910',
+  #  'https': 'socks5://127.0.0.1:10910',
 }
 
 def getSource(url):     # 读取完整页面 返回一个漫画名称和下载地址的mapping
@@ -111,7 +112,7 @@ def getSourcePageNumber():
 
 
 def main(): # main 模块
-    recode = '';
+    recode = ''
     if os.path.exists('recode') == False:
         print('第一次运行，建立页面记录')
         os._exists('recode')
@@ -134,7 +135,7 @@ def main(): # main 模块
     tmp = os.listdir(rootPath)
     allcomic = []
     for i in tmp:
-        allcomic.append(i[:-1]) # 读取目录列表，保存以便判断漫画是否下载
+        allcomic.append(i) # 读取目录列表，保存以便判断漫画是否下载
     del tmp
     for y in url_list:
         print('正在下载: ',y)
@@ -149,12 +150,25 @@ def main(): # main 模块
             f.write(wrotePart)
         comic = getSource(y)
         print('下载列表:',comic)
+
         for x in comic:
+            comic[x] = cleanName(comic[x])
             # print(comic[x],end=' ')
             # print((comic[x]+'.cbr'  in allcomic))
             if ((comic[x]+'.cbr') in allcomic) == True:
                 print(comic[x],'.cbr已经存在。')
             else:
+                if (comic[x] in allcomic) == True: #匹配图片数量跟文件名上的数量是不是一样,一样就不需要重新下载
+                    resultList = re.findall(r'([\d]*)P', comic[x])
+                    imageCntInTitle = int(resultList[-1])
+                    dir = os.path.join(rootPath, comic[x])
+                    imageCnt = len(os.listdir(dir))
+                    if(imageCnt == imageCntInTitle):
+                        print(comic[x] + "无需重复下载")
+                        if (os.name != 'nt'):
+                            command = 'rar a -r -s -m5\'' + comic[x] + '.cbr\' \'' + comic[x] + '\''
+                            os.system(command)
+                        continue
                 print('正在下载: ',comic[x])
                 if (os.path.exists(comic[x])) == True:
                     print('目录已经存在。')
@@ -173,6 +187,12 @@ def main(): # main 模块
                         os.system(command)
                     # os.system('clear')
 
+def cleanName(arbitrary_string): #windows has some invalid charater in directory or filename should be removed
+    # arbitrary_string = "File!name?.txt"
+    cleaned_up_filename = re.sub(r'[/\\:*?"<>|]', '', arbitrary_string)
+    # filepath = os.path.join("/tmp", cleaned_up_filename)
+    return cleaned_up_filename
+
 def downloadComic1(comic_link):
     print("downloadComic1 running successfully");
 
@@ -190,11 +210,11 @@ def getExistedComicPacks():
     tmp = os.popen('ls').readlines()
     allcomic = []
     for i in tmp:
-        allcomic.append(i[:-1]) # 读取目录列表，保存以便判断漫画是否下载
+        allcomic.append(i) # 读取目录列表，保存以便判断漫画是否下载
     return allcomic
 
 def downloadSingleComic(url):
-    comicName = getSourceName(url)
+    comicName = cleanName(getSourceName(url))
     allcomic = getExistedComicPacks();
     if ((comicName + '.cbr') in allcomic) == True:
         print(comicName, '.cbr已经存在。')
