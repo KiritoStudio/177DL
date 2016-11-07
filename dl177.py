@@ -24,11 +24,12 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='gb18030')
 sourceHost = 'www.177pic.info'
 # sourceHost = 'pic177.com'
 rootPath = ''
+recodeFileName = 'recode'
 
 proxies = {
   # 'http': 'http://127.0.0.1:10910',
   # 'https': 'http://127.0.0.1:10910',
-     'http': 'http://192.168.2.100:10910',
+     'http': 'http://127.0.0.1:1081',
   #   'https': 'https://192.168.2.100:8888',
   #  'http': 'socks5://127.0.0.1:10910',
   #  'https': 'socks5://127.0.0.1:10910',
@@ -41,8 +42,11 @@ def getSource(url):     # 读取完整页面 返回一个漫画名称和下载�
     dl = []
     title = []
     for x in link:
-        title.append(x.contents[0]['title'][13:]) # h2 tag 下还有其他tag读取内容
-        dl.append(x.contents[0]['href'])
+        try:
+            title.append(x.contents[0]['title'][13:]) # h2 tag 下还有其他tag读取内容
+            dl.append(x.contents[0]['href'])
+        except Exception as e:
+            print ("error happened")
     comic = dict(zip(dl,title))
     return(comic)
 
@@ -113,16 +117,16 @@ def getSourcePageNumber():
 
 def main(): # main 模块
     recode = ''
-    if os.path.exists('recode') == False:
+    if os.path.exists(recodeFileName) == False:
         print('第一次运行，建立页面记录')
-        os._exists('recode')
+        os._exists(recodeFileName)
         # os.popen('touch recode')    # 判断是否首次执行脚本
-        with open ('recode','w') as f:
+        with open (recodeFileName,'w') as f:
             recode = '/html/category/tt/page/1'
             f.write(recode)
     else:
         print('读取上次停止下载页面')
-        with open('recode','r') as f:
+        with open(recodeFileName,'r') as f:
             trecode = f.readline().replace('\n','')  # 读取记录
             recode = trecode.split('/')
             print('上次停止在第{0}页'.format(recode))
@@ -139,7 +143,7 @@ def main(): # main 模块
     del tmp
     for y in url_list:
         print('正在下载: ',y)
-        with open('recode','w') as f:
+        with open(recodeFileName,'w') as f:
             wrotePart = ""
             yParts = y.split('/')
             for i in range(len(yParts)):
@@ -149,6 +153,9 @@ def main(): # main 模块
                     wrotePart += "/" + yParts[i]
             f.write(wrotePart)
         comic = getSource(y)
+        while(len(comic) <= 0):
+            print ("comic list should not be 0, retry")
+            comic = getSource(y)
         print('下载列表:',comic)
 
         for x in comic:
@@ -256,11 +263,16 @@ if __name__ == '__main__':
     newParser.add_argument("-u", "--url", type=str, help="put the target url")
     newParser.add_argument("-H", "--host", type=str, help="put the source host. eg: 177pic.com")
     newParser.add_argument("-R", "--reset", action='store_true', help="delete the recode file and restart downloading")
+    newParser.add_argument("-P", "--part", type=str, help="Specify the recode part number") #多个脚本开启,使用的recode文件
     args = newParser.parse_args()
 
+
+    if args.part:
+        recodeFileName += args.part
+        print "recode as:" + recodeFileNames
     if args.reset:
-        if os.path.exists('recode'):
-            os.remove('recode')
+        if os.path.exists(recodeFileName):
+            os.remove(recodeFileName)
             print('reset the record successfully')
     if args.host:
         if "http://" in str(args.host) or "https://" in str(args.host):
