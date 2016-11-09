@@ -269,7 +269,7 @@ if __name__ == '__main__':
 
     if args.part:
         recodeFileName += args.part
-        print "recode as:" + recodeFileNames
+        print ("recode as:" + recodeFileNames)
     if args.reset:
         if os.path.exists(recodeFileName):
             os.remove(recodeFileName)
