@@ -133,7 +133,7 @@ def main(): # main 模块
     url = 'http://' + sourceHost +'/html/category/tt'
     total_page = getSourcePageNumber()
     url_list = []
-    for i in range(int(recode[-1]), total_page):    # 根据记录选择开始页面
+    for i in range(int(recode[-1]), total_page + 1):    # 根据记录选择开始页面 
         url_list.append(url+'/page/'+str(i))
     # tmp = os.popen('ls').readlines()
     tmp = os.listdir(rootPath)
