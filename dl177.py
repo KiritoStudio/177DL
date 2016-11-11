@@ -133,7 +133,7 @@ def main(): # main 模块
     url = 'http://' + sourceHost +'/html/category/tt'
     total_page = getSourcePageNumber()
     url_list = []
-    for i in range(int(recode[-1]), total_page + 1):    # 根据记录选择开始页面 
+    for i in range(int(recode[-1]), total_page + 1):    # 根据记录选择开始页面
         url_list.append(url+'/page/'+str(i))
     # tmp = os.popen('ls').readlines()
     tmp = os.listdir(rootPath)
@@ -159,6 +159,8 @@ def main(): # main 模块
         print('下载列表:',comic)
 
         for x in comic:
+            if (x != "http://www.177pic.info/html/2013/11/10659.html"):
+                continue;
             comic[x] = cleanName(comic[x])
             # print(comic[x],end=' ')
             # print((comic[x]+'.cbr'  in allcomic))
@@ -269,7 +271,7 @@ if __name__ == '__main__':
 
     if args.part:
         recodeFileName += args.part
-        print ("recode as:" + recodeFileNames)
+        print ("recode as:" + recodeFileName)
     if args.reset:
         if os.path.exists(recodeFileName):
             os.remove(recodeFileName)
