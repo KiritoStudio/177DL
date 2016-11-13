@@ -19,12 +19,13 @@ import argparse
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
-
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='gb18030')
+if(os.name == 'nt'):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='gb18030')
 sourceHost = 'www.177pic.info'
 # sourceHost = 'pic177.com'
 rootPath = ''
 recodeFileName = 'recode'
+exclusionFileName = 'exclusion'
 
 proxies = {
   # 'http': 'http://127.0.0.1:10910',
@@ -159,42 +160,67 @@ def main(): # main 模块
         print('下载列表:',comic)
 
         for x in comic:
-            if (x != "http://www.177pic.info/html/2013/11/10659.html"):
-                continue;
             comic[x] = cleanName(comic[x])
-            # print(comic[x],end=' ')
-            # print((comic[x]+'.cbr'  in allcomic))
             if ((comic[x]+'.cbr') in allcomic) == True:
                 print(comic[x],'.cbr已经存在。')
             else:
                 if (comic[x] in allcomic) == True: #匹配图片数量跟文件名上的数量是不是一样,一样就不需要重新下载
-                    resultList = re.findall(r'([\d]*)P', comic[x])
-                    imageCntInTitle = int(resultList[-1])
-                    dir = os.path.join(rootPath, comic[x])
-                    imageCnt = len(os.listdir(dir))
-                    if(imageCnt == imageCntInTitle):
+                    countList = imageCurrentCount(comic[x])
+                    print("count in directory:" + str(countList[0]) + "/" + str(countList[1])) #有一些漫画实际数量比标称数量要少的,需要在做mark,防止下次再download
+                    if(int(countList[0]) == int(countList[1])):
                         print(comic[x] + "无需重复下载")
-                        if (os.name != 'nt'):
-                            command = 'rar a -r -s -m5\'' + comic[x] + '.cbr\' \'' + comic[x] + '\''
-                            os.system(command)
+                        # if (os.name != 'nt'):
+                        #     command = 'rar a -r -s -m5\'' + comic[x] + '.cbr\' \'' + comic[x] + '\''
+                        #     os.system(command)
                         continue
+                    else:
+                        if(os.path.exists(exclusionFileName)):
+                            with open(exclusionFileName, mode='r',encoding="utf-8") as f:
+                                listAllExclusion = []
+                                for line in f:
+                                    listAllExclusion.append(line)
+                                if (comic[x] in listAllExclusion):
+                                    print(comic[x] + "in exclusion list")
+                                    # if (os.name != 'nt'):
+                                    #     command = 'rar a -r -s -m5\'' + comic[x] + '.cbr\' \'' + comic[x] + '\''
+                                    #     os.system(command)
                 print('正在下载: ',comic[x])
                 if (os.path.exists(comic[x])) == True:
                     print('目录已经存在。')
                     os.chdir(comic[x])
                     downloadComic(x)
-                    if (os.name != 'nt'):
-                        command = 'rar a -r -s -m5\''+comic[x]+'.cbr\' \''+comic[x]+'\'' # -df deleted because we need remain the folder
-                        os.system(command)
+                    # if (os.name != 'nt'):
+                    #     command = 'rar a -r -s -m5\''+comic[x]+'.cbr\' \''+comic[x]+'\'' # -df deleted because we need remain the folder
+                    #     os.system(command)
                     # os.system('clear')
                 else:
                     os.mkdir(comic[x])
                     os.chdir(comic[x])
                     downloadComic(x)
-                    if(os.name != 'nt'):
-                        command = 'rar a -r -s -m5\''+comic[x]+'.cbr\' \''+comic[x]+'\''  # -df deleted because we need remain the folder
-                        os.system(command)
+                    # if(os.name != 'nt'):
+                    #     command = 'rar a -r -s -m5\''+comic[x]+'.cbr\' \''+comic[x]+'\''  # -df deleted because we need remain the folder
+                    #     os.system(command)
                     # os.system('clear')
+                #finished download check image lack
+                imageCountList = imageCurrentCount(comic[x])
+                if(int(imageCountList[0]) < int(imageCountList[1])):
+                    #mark current to the exclusion file
+                    with open(exclusionFileName, mode='w+',encoding="utf-8") as f:
+                        listAllExclusion = []
+                        for line in f:
+                            listAllExclusion.append(line)
+                        if(comic[x] in listAllExclusion):
+                            print (comic[x] + " has in exclusion")
+                        else:
+                            print ("write " + comic[x] + " to exclusion")
+                            f.write(comic[x] + os.linesep)
+
+def imageCurrentCount(targetComic):
+    resultList = re.findall(r'([\d]*)P', targetComic)
+    imageCntInTitle = int(resultList[-1])
+    dir = os.path.join(rootPath, targetComic)
+    imageCnt = len(os.listdir(dir))
+    return [ imageCnt, imageCntInTitle ]
 
 def cleanName(arbitrary_string): #windows has some invalid charater in directory or filename should be removed
     # arbitrary_string = "File!name?.txt"
@@ -234,16 +260,16 @@ def downloadSingleComic(url):
             print('目录已经存在。')
             os.chdir(comicName)
             downloadComic(url)
-            if (os.name != 'nt'):
-                command = 'rar a -r -s -m5\'' + comicName + '.cbr\' \'' + comicName + '\''
-                os.system(command)
+            # if (os.name != 'nt'):
+            #     command = 'rar a -r -s -m5\'' + comicName + '.cbr\' \'' + comicName + '\''
+            #     os.system(command)
         else:
             os.mkdir(comicName)
             os.chdir(comicName)
             downloadComic(url)
-            if (os.name != 'nt'):
-                command = 'rar a -r -s -m5\'' + comicName + '.cbr\' \'' + comicName + '\'' # -df deleted because we need remain the folder
-                os.system(command)
+            # if (os.name != 'nt'):
+            #     command = 'rar a -r -s -m5\'' + comicName + '.cbr\' \'' + comicName + '\'' # -df deleted because we need remain the folder
+            #     os.system(command)
         print(os.path.join(rootPath, comicName + '.cbr'))
 
 if __name__ == '__main__':
