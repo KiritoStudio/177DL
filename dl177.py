@@ -175,15 +175,19 @@ def main(): # main 模块
                         continue
                     else:
                         if(os.path.exists(exclusionFileName)):
+                            print('check exclusion')
                             with open(exclusionFileName, mode='r',encoding="utf-8") as f:
                                 listAllExclusion = []
                                 for line in f:
+                                    line = line.replace("\n","")
                                     listAllExclusion.append(line)
+                                print(comic[x] in listAllExclusion)
                                 if (comic[x] in listAllExclusion):
-                                    print(comic[x] + "in exclusion list")
+                                    print(comic[x] + "in exclusion list, no need to download again")
                                     # if (os.name != 'nt'):
                                     #     command = 'rar a -r -s -m5\'' + comic[x] + '.cbr\' \'' + comic[x] + '\''
                                     #     os.system(command)
+                                    continue
                 print('正在下载: ',comic[x])
                 if (os.path.exists(comic[x])) == True:
                     print('目录已经存在。')
@@ -205,7 +209,7 @@ def main(): # main 模块
                 imageCountList = imageCurrentCount(comic[x])
                 if(int(imageCountList[0]) < int(imageCountList[1])):
                     #mark current to the exclusion file
-                    with open(exclusionFileName, mode='w+',encoding="utf-8") as f:
+                    with open(exclusionFileName, mode='a+',encoding="utf-8") as f:
                         listAllExclusion = []
                         for line in f:
                             listAllExclusion.append(line)
@@ -213,7 +217,7 @@ def main(): # main 模块
                             print (comic[x] + " has in exclusion")
                         else:
                             print ("write " + comic[x] + " to exclusion")
-                            f.write(comic[x] + os.linesep)
+                            print(comic[x], file=f) #f.write(comic[x])
 
 def imageCurrentCount(targetComic):
     resultList = re.findall(r'([\d]*)P', targetComic)
