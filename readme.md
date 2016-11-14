@@ -2,7 +2,7 @@
 
 从某网站下载所有中文漫画
 
-可以在局域网NAS下流程阅读
+可以在局域网NAS下流畅阅读
 
 ## 依赖
 
@@ -14,15 +14,7 @@ lxml
 
 beautifulsoup
 
-``` bash
-pip3.5 install lxml
-pip3.5 install beautifulsoup4
-pip3.5 install requests[socks]
-pip3.5 install argparse
-pip3.5 install django
-```
-
-For Windows
+## For Windows
 
 Before install pip components, you should install VS compile environment. You can install VS 2015 or install from http://download.microsoft.com/download/5/f/7/5f7acaeb-8363-451f-9425-68a90f98b238/visualcppbuildtools_full.exe
 
@@ -35,9 +27,15 @@ pip3.5 install argparse
 pip3.5 install django
 ```
 
-## Linux使用
+## For Linux
 
 ``` bash
+pip3.5 install lxml
+pip3.5 install beautifulsoup4
+pip3.5 install requests[socks]
+pip3.5 install argparse
+pip3.5 install django
+
 chmod +x 177dl.py
 ./177dl.py
 ```
