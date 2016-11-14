@@ -181,7 +181,6 @@ def main(): # main 模块
                                 for line in f:
                                     line = line.replace("\n","")
                                     listAllExclusion.append(line)
-                                print(comic[x] in listAllExclusion)
                                 if (comic[x] in listAllExclusion):
                                     print(comic[x] + "in exclusion list, no need to download again")
                                     # if (os.name != 'nt'):
