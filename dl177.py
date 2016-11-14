@@ -181,6 +181,7 @@ def main(): # main 模块
                                 for line in f:
                                     line = line.replace("\n","")
                                     listAllExclusion.append(line)
+                                print(comic[x] in listAllExclusion)
                                 if (comic[x] in listAllExclusion):
                                     print(comic[x] + "in exclusion list, no need to download again")
                                     # if (os.name != 'nt'):
@@ -220,10 +221,12 @@ def main(): # main 模块
 
 def imageCurrentCount(targetComic):
     resultList = re.findall(r'([\d]*)P', targetComic)
-    imageCntInTitle = int(resultList[-1])
+    imageCntInTitle = 0
+    if (len(resultList) > 0):
+        imageCntInTitle = int(resultList[-1])
     dir = os.path.join(rootPath, targetComic)
     imageCnt = len(os.listdir(dir))
-    return [ imageCnt, imageCntInTitle ]
+    return [imageCnt, imageCntInTitle]
 
 def cleanName(arbitrary_string): #windows has some invalid charater in directory or filename should be removed
     # arbitrary_string = "File!name?.txt"
