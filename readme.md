@@ -14,15 +14,7 @@ lxml
 
 beautifulsoup
 
-``` bash
-pip3.5 install lxml
-pip3.5 install beautifulsoup4
-pip3.5 install requests[socks]
-pip3.5 install argparse
-pip3.5 install django
-```
-
-For Windows
+## For Windows
 
 Before install pip components, you should install VS compile environment. You can install VS 2015 or install from http://download.microsoft.com/download/5/f/7/5f7acaeb-8363-451f-9425-68a90f98b238/visualcppbuildtools_full.exe
 
@@ -38,6 +30,12 @@ pip3.5 install django
 ## Linux使用
 
 ``` bash
+pip3.5 install lxml
+pip3.5 install beautifulsoup4
+pip3.5 install requests[socks]
+pip3.5 install argparse
+pip3.5 install django
+
 chmod +x 177dl.py
 ./177dl.py
 ```
