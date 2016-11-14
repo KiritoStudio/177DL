@@ -27,7 +27,7 @@ pip3.5 install argparse
 pip3.5 install django
 ```
 
-## Linux使用
+## For Linux
 
 ``` bash
 pip3.5 install lxml
