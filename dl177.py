@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3.5
+#!/usr/local/bin/python3
 # -*- coding: utf-8 -*-
 __author__ = 'wudaown'
 

@@ -8,7 +8,7 @@
 
 需要
 
-python3.5
+python3.7
 
 lxml 
 
@@ -21,20 +21,20 @@ Before install pip components, you should install VS compile environment. You ca
 
 ``` bash
 set STATICBUILD=true && pip install lxml
-pip3.5 install beautifulsoup4
-pip3.5 install requests[socks]
-pip3.5 install argparse
-pip3.5 install django
+pip3 install beautifulsoup4
+pip3 install requests[socks]
+pip3 install argparse
+pip3 install django
 ```
 
 ## For Linux
 
 ``` bash
-pip3.5 install lxml
-pip3.5 install beautifulsoup4
-pip3.5 install requests[socks]
-pip3.5 install argparse
-pip3.5 install django
+pip3 install lxml
+pip3 install beautifulsoup4
+pip3 install requests[socks]
+pip3 install argparse
+pip3 install django
 
 chmod +x 177dl.py
 ./177dl.py
